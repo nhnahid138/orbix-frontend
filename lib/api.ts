@@ -1,4 +1,3 @@
-const API_URL = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
 let accessToken: string | null = null;
 let refreshPromise: Promise<boolean> | null = null;
 let refreshedUser: { id: number; name: string; email: string; phoneNumber?: string | null; role: "customer" | "admin" } | null = null;
@@ -10,7 +9,7 @@ export function setAccessToken(token: string | null) {
 }
 
 export function apiUrl(path: string) {
-  return `${API_URL}/api/v1${path.startsWith("/") ? path : `/${path}`}`;
+  return `/api/v1${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 async function refreshAccessToken() {

@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   async rewrites() {
     const apiOrigin = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
     return apiOrigin ? [{
+      source: "/api/v1/:path*",
+      destination: `${apiOrigin}/api/v1/:path*`,
+    }, {
       source: "/store-branding.json",
       destination: `${apiOrigin}/api/v1/branding`,
     }, {
