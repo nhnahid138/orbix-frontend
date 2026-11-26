@@ -1,8 +1,9 @@
+import { productImageUrl } from "./product-image";
 export type GuestCartLine = { variantId: number; productId: number; name: string; slug: string; image: string; sku?: string; priceMinor: number; quantity: number; attributes?: Record<string,string> };
 const KEY = "orbix_cart_v1";
 export function readGuestCart(): GuestCartLine[] {
   if (typeof window === "undefined") return [];
-  try { const data = JSON.parse(localStorage.getItem(KEY) ?? "[]"); return Array.isArray(data) ? data : []; } catch { return []; }
+  try { const data = JSON.parse(localStorage.getItem(KEY) ?? "[]"); return Array.isArray(data) ? data.map(line => ({ ...line, image: productImageUrl(line.image) })) : []; } catch { return []; }
 }
 export function writeGuestCart(lines: GuestCartLine[]) {
   localStorage.setItem(KEY, JSON.stringify(lines));

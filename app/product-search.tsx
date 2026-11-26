@@ -1,5 +1,6 @@
 "use client";
 
+import { productImageUrl } from "../lib/product-image";
 import Link from "next/link";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { api, errorMessage, formatMoney } from "../lib/api";
@@ -74,7 +75,7 @@ export default function ProductSearch({ categoryId }: { categoryId?: string | nu
           {current?.items.map(product => <li key={product.id}>
             <Link href={`/products/${encodeURIComponent(product.slug)}`} onNavigate={() => setOpen(false)}>
               <span className={styles.photo} aria-hidden="true" style={product.images?.[0]?.url ? {
-                backgroundImage: `url(${JSON.stringify(product.images[0].url)})`,
+                backgroundImage: `url(${JSON.stringify(productImageUrl(product.images[0].url))})`,
               } : undefined}>{!product.images?.[0]?.url && product.name.charAt(0)}</span>
               <span className={styles.label}><strong>{product.name}</strong>{product.category && <small>{product.category.name}</small>}</span>
               {product.variants?.[0] && <b className={styles.price}>{formatMoney(product.variants[0].priceMinor)}</b>}

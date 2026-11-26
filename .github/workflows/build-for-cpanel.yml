@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-24.04
     env:
-      NEXT_PUBLIC_API_URL: https://api.orbixbd.tech
+      NEXT_PUBLIC_API_URL: https://orbix.thepixtech.com
       NODE_ENV: production
     steps:
       - uses: actions/checkout@v4

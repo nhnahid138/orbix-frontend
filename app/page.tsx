@@ -1,3 +1,4 @@
+import { productImageUrl } from "../lib/product-image";
 import Storefront, { type StoreProduct } from "./storefront";
 import { Suspense } from "react";
 import { connection } from "next/server";
@@ -41,7 +42,7 @@ async function getProducts(): Promise<StoreProduct[]> {
         price: Number(variant?.priceMinor ?? 0) / 100,
         compareAtPrice: variant?.compareAtMinor ? Number(variant.compareAtMinor) / 100 : null,
         category: product.category?.name ?? "Objects",
-        image: product.images?.[0]?.url ?? fallbackProducts[index % fallbackProducts.length].image,
+        image: productImageUrl(product.images?.[0]?.url) ?? fallbackProducts[index % fallbackProducts.length].image,
         badge: index === 0 ? "JUST DROPPED" : "", tone: fallbackProducts[index % fallbackProducts.length].tone,
       };
     });
