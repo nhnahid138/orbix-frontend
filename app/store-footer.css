@@ -1,0 +1,74 @@
+.store-logo-image { display:block; width:auto; max-width:min(150px,24vw); height:38px; object-fit:contain; }
+.store-wordmark { font-weight:800; letter-spacing:-.065em; }
+.store-footer {
+  background:
+    radial-gradient(circle at 100% 100%, transparent 12%, #ffffff12 12.2% 15%, transparent 15.2% 18%, #ffffff0c 18.2% 21%, transparent 21.2%),
+    linear-gradient(110deg, #122550, #203d80 62%, #294fb2);
+  color: #e3ebff;
+  padding: clamp(36px,5vw,70px) clamp(20px,6vw,96px) 24px;
+  font: 14px/1.65 var(--sans);
+  overflow-wrap: anywhere;
+}
+.store-footer-grid { display:grid; grid-template-columns:1.25fr 1.25fr 1fr 1fr; gap:clamp(22px,4vw,64px); }
+.store-footer h2 { margin:0 0 16px; color:white; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; }
+.store-footer-logo { display:inline-flex; align-items:center; margin-bottom:12px; font-size:36px; line-height:1.1; color:#fff; }
+.store-footer-logo img { max-width:180px; height:52px; }
+.store-footer p { margin:4px 0 14px; max-width:36ch; white-space:pre-line; }
+.store-footer ul { list-style:none; padding:0; margin:0; display:grid; gap:9px; }
+.store-footer a:hover { color:white; text-decoration:underline; text-underline-offset:4px; }
+.store-footer strong { color:#edf2fa; font-weight:650; }
+.store-outlets li { border-inline-start:2px solid #7498ff; padding-inline-start:12px; }
+.store-outlets p { margin:2px 0 0; }
+.store-footer-contact { display:grid; margin-top:10px; }
+.store-footer-pills { display:flex; gap:8px; flex-wrap:wrap; }
+.store-footer-grid .store-footer-pills { margin-top:18px; }
+.store-footer-pills a { display:inline-flex; align-items:center; padding:6px 12px; border:1px solid #ffffff60; border-radius:20px; background:#ffffff0f; color:#fff; }
+.store-footer-pills a:is(:hover,:focus-visible) { background:#ffffff28; }
+.store-footer-payments {
+  width: 100%;
+  max-width: 380px;
+  padding: 8px;
+  border: 1px solid #e2e8f4;
+  border-radius: 10px;
+  background: white;
+  overflow: hidden;
+}
+.store-footer-payments img { display: block; width: 100%; height: auto; }
+.store-footer-connect {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(260px, 1.5fr);
+  align-items: start;
+  gap: clamp(20px, 3vw, 48px);
+  margin-top: 32px;
+  padding-block: 24px;
+  border-top: 1px solid #ffffff26;
+}
+.store-footer-payment-panel { width: min(100%, 380px); min-width: 0; }
+.store-footer-payment-group { display: contents; }
+.store-footer-social { justify-self: start; }
+.store-social-icons { display: flex; flex-wrap: nowrap; gap: 7px; }
+.store-social-icons a,.store-social-icons span { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid #ffffff45; color: white; background: #ffffff0d; }
+.store-social-icons svg { width: 19px; height: 19px; }
+.store-social-icons a:hover { color: #193d80; background: white; }
+.store-social-icons span { opacity: .5; }
+.store-whatsapp { margin-top: 20px; }
+.store-whatsapp h2 { margin-bottom: 10px; }
+.store-whatsapp a { display: inline-flex; align-items: center; gap: 9px; color: white; font-weight: 600; }
+.store-whatsapp svg { color: #6ee7a2; }
+.store-whatsapp a:hover { color: #b8ffd0; }
+@media (max-width: 500px) { .store-social-icons { gap: 7px; } }
+.store-footer-support { flex: 0 0 auto; }
+.store-footer-link-columns { display: contents; }
+.store-footer-support ul { gap: 6px; font-size: 13px; }
+.store-footer-support h2 { margin-bottom: 12px; }
+.store-footer-payment-panel h2 { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.store-footer-payment-panel h2 span { color: #bbcef4; font-size: 10px; font-weight: 400; text-transform: none; letter-spacing: 0; }
+.store-footer-connect + .store-footer-base { margin-top: 0; padding-top: 16px; color: #c4d2ed; font-size: 12px; border-color: #ffffff26; }
+@media (max-width: 700px) {
+  .store-footer-connect { grid-template-columns: 1fr; gap: 24px; }
+  .store-footer-payment-panel { margin-left: 0; }
+  .store-footer-payment-group { margin-left: 0; }
+}
+.store-footer-base { margin-top:32px; border-top:1px solid #ffffff38; padding-top:20px; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; font-size:13px; }
+@media(max-width:850px) { .store-footer-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:480px) { .store-footer-grid { gap:26px 16px; } .store-footer-grid > div:first-child,.store-footer-grid > section:has(.store-outlets) { grid-column:1/-1; } }

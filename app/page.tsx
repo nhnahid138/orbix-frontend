@@ -1,69 +1,105 @@
-import Image from "next/image";
+import Storefront, { type StoreProduct } from "./storefront";
+import { Suspense } from "react";
+import { connection } from "next/server";
+import FeaturedCategories from "./featured-categories";
+import BannerCarousel from "./banner-carousel";
+
+const fallbackProducts: StoreProduct[] = [
+  { id: "p1", name: "Nova X Pro Smartphone", slug: "nova-x-pro-smartphone", price: 84990, compareAtPrice: 92990, category: "Smartphones", image: "https://images.unsplash.com/photo-1511707267537-b85faf000f8b?auto=format&fit=crop&w=900&q=85", badge: "BESTSELLER", tone: "sand" },
+  { id: "p2", name: "Sonic Pro Wireless Headphones", slug: "sonic-pro-wireless-headphones", price: 12990, compareAtPrice: null, category: "Audio", image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=900&q=85", badge: "NEW ARRIVAL", tone: "sage" },
+  { id: "p3", name: "AirBook 14 Creator Laptop", slug: "airbook-14-creator-laptop", price: 124990, compareAtPrice: null, category: "Laptops", image: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=900&q=85", badge: "", tone: "clay" },
+  { id: "p4", name: "Pulse Active Smartwatch", slug: "pulse-active-smartwatch", price: 8990, compareAtPrice: null, category: "Wearables", image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=85", badge: "LIMITED", tone: "blue" },
+];
+
+export type StoreBanner = { id?: number; eyebrow: string; title: string; subtitle: string | null; imageUrl: string; ctaLabel: string; ctaHref: string; sortOrder?: number };
+export type StoreCategory = { id: number; name: string; slug: string; description?: string | null; mainImageUrl?: string | null };
+type ApiProduct = { isFeatured?: boolean; id: number; name: string; slug: string; category?: { name: string } | null; variants?: { id: number; priceMinor: number; compareAtMinor?: number | null }[]; images?: { url: string }[] };
+const fallbackBanners: StoreBanner[] = [
+  { eyebrow: "THE NEXT GENERATION IS HERE", title: "Your world.\nUpgraded.", subtitle: "Discover the latest smartphones, laptops and everyday tech, all in one place.", imageUrl: "https://images.unsplash.com/photo-1511707267537-b85faf000f8b?auto=format&fit=crop&w=2200&q=90", ctaLabel: "Explore gadgets", ctaHref: "#shop", sortOrder: 0 },
+  { eyebrow: "SOUND THAT MOVES WITH YOU", title: "Find your\nfrequency.", subtitle: "Immersive audio and accessories for wherever the day takes you.", imageUrl: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=2200&q=90", ctaLabel: "Shop audio", ctaHref: "#shop", sortOrder: 1 },
+  { eyebrow: "BUILT FOR WHAT'S NEXT", title: "Power up\nyour everyday.", subtitle: "Meet the smart devices that make more of every moment.", imageUrl: "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=2200&q=90", ctaLabel: "Find your tech", ctaHref: "#shop", sortOrder: 2 },
+];
+
+async function getProducts(): Promise<StoreProduct[]> {
+  await connection();
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  if (!base) return process.env.NODE_ENV === "production" ? [] : fallbackProducts;
+  try {
+    const items: ApiProduct[] = [];
+    for (let page = 1; ; page++) {
+      const response = await fetch(`${base.replace(/\/$/, "")}/api/v1/products?limit=100&sort=created&page=${page}`);
+      if (!response.ok) throw new Error("Catalog unavailable");
+      const result = await response.json() as { items: ApiProduct[]; total: number };
+      items.push(...result.items);
+      if (!result.items.length || items.length >= result.total) break;
+    }
+    return items.map((product, index) => {
+      const variant = product.variants?.[0];
+      return {
+        id: String(product.id), isFeatured: !!product.isFeatured, name: product.name, slug: product.slug,
+        productId: Number(product.id), variantId: variant?.id ? Number(variant.id) : undefined,
+        price: Number(variant?.priceMinor ?? 0) / 100,
+        compareAtPrice: variant?.compareAtMinor ? Number(variant.compareAtMinor) / 100 : null,
+        category: product.category?.name ?? "Objects",
+        image: product.images?.[0]?.url ?? fallbackProducts[index % fallbackProducts.length].image,
+        badge: index === 0 ? "JUST DROPPED" : "", tone: fallbackProducts[index % fallbackProducts.length].tone,
+      };
+    });
+  } catch {
+    return process.env.NODE_ENV === "production" ? [] : fallbackProducts;
+  }
+}
+
+async function getBanners(): Promise<StoreBanner[]> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  if (!base) return process.env.NODE_ENV === "production" ? [] : fallbackBanners;
+  try {
+    const response = await fetch(`${base.replace(/\/$/, "")}/api/v1/banners`, { cache: "no-store" });
+    if (!response.ok) return process.env.NODE_ENV === "production" ? [] : fallbackBanners;
+    const data = await response.json();
+    if (!Array.isArray(data)) return [];
+    return data.map((banner: StoreBanner) => {
+      const image = new URL(banner.imageUrl, base);
+      // Serve files from our upload directory through the storefront, including older localhost URLs.
+      if (/^\/media\/banners\/[a-f0-9-]+\.(jpg|png|webp|avif)$/i.test(image.pathname)
+        && (image.origin === new URL(base).origin || ["localhost", "127.0.0.1", "[::1]"].includes(image.hostname))) {
+        return { ...banner, imageUrl: image.pathname };
+      }
+      return banner;
+    });
+  } catch {
+    return process.env.NODE_ENV === "production" ? [] : fallbackBanners;
+  }
+}
+
+async function getCategories(): Promise<StoreCategory[]> {
+  const base = process.env.NEXT_PUBLIC_API_URL;
+  if (!base) return [];
+  try {
+    const response = await fetch(`${base.replace(/\/$/, "")}/api/v1/categories`, { cache: "no-store" });
+    if (!response.ok) return [];
+    const data = await response.json();
+    return Array.isArray(data) ? data : [];
+  } catch {
+    return [];
+  }
+}
+
+async function HomepageBanners() {
+  await connection();
+  return <BannerCarousel banners={await getBanners()} />;
+}
+
+async function HomepageCategories() {
+  await connection();
+  return <FeaturedCategories categories={await getCategories()} />;
+}
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+  return <Suspense fallback={<main aria-busy="true" aria-label="Loading store" />}><HomeCatalog /></Suspense>;
+}
+
+async function HomeCatalog() {
+  const products = await getProducts();
+  return <Storefront products={products} hero={<Suspense fallback={<div className="hero home-banner" aria-label="Loading banners" />}><HomepageBanners /></Suspense>} categories={<Suspense fallback={null}><HomepageCategories /></Suspense>} />;
 }

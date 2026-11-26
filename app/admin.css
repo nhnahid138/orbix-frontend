@@ -1,0 +1,65 @@
+.banner-form{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}.banner-form h2{grid-column:1/-1}.banner-form .span-two{grid-column:span 2}.banner-form textarea{width:100%;padding:9px;resize:vertical}.banner-form input[type="datetime-local"]{padding:0 7px}.banner-form .checkbox-label{display:flex!important;align-items:center;gap:7px}.banner-form .checkbox-label input{width:auto;height:auto;accent-color:#777a5d}.banner-form-actions{grid-column:1/-1;display:flex;align-items:center;gap:14px}.banner-live-preview{grid-column:1/-1;min-height:220px;background:#e8e4da center/cover no-repeat;padding:22px;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;color:#292a23}.banner-live-preview small,.banner-admin-preview small{font-size:8px;letter-spacing:.14em}.banner-live-preview b{font:32px/1.1 var(--serif);white-space:pre-line;max-width:60%}.banner-live-preview span{font-size:9px;border-bottom:1px solid #868578;padding-bottom:5px}.banner-list-head{display:flex;align-items:flex-end;justify-content:space-between;margin:27px 0 15px}.banner-list-head>div>small{font-size:7px;letter-spacing:.14em;color:#89887d}.banner-list-head h2{font:24px var(--serif);margin:7px 0 0}.banner-list-head>span{font-size:8px;color:#929087}.banner-admin-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}.banner-admin-card{background:#fff;border:1px solid #e9e7e0}.banner-admin-preview{height:185px;padding:14px;display:flex;flex-direction:column;justify-content:space-between;background-color:#e8e4da;background-size:cover;background-position:center}.banner-admin-preview small{color:#65665a}.banner-admin-preview b{font:25px/1.1 var(--serif);white-space:pre-line;max-width:70%}.banner-admin-preview>span{font-size:8px}.banner-admin-info{display:flex;align-items:center;justify-content:space-between;padding:12px;gap:10px}.banner-admin-info>div:first-child{display:grid;gap:6px}.banner-admin-info>div:last-child{display:flex;gap:14px}.banner-admin-info small{font-size:7px;color:#949289;letter-spacing:.06em}.banner-active,.banner-inactive{font-size:7px;letter-spacing:.1em;color:#63714f}.banner-inactive{color:#9a674d}.banner-admin-info button{font-size:9px}.banner-empty{padding:55px;background:#fff}.review-feed{min-width:0}.review-form{display:grid;gap:10px;background:#f2f0ea;padding:18px;margin-top:20px}.review-form h3{font:21px var(--serif);margin:0 0 4px}.review-form label{display:grid;gap:5px;font-size:9px;color:#74736a}.review-form input,.review-form select,.review-form textarea{width:100%;border:1px solid #dedbd3;background:#fbfaf7;padding:9px;font:11px var(--sans)}.review-form select{height:37px}.review-form .primary-button{width:max-content}.address-manage-form{margin-bottom:24px;padding:18px;background:#f2f0ea}.address-manage-list{display:grid;gap:10px;margin-bottom:24px}.saved-address-card{display:flex;align-items:center;justify-content:space-between;padding:18px;background:#f2f0ea}.saved-address-card p{font-size:10px;line-height:1.8;color:#75746a}.saved-address-card em{font-style:normal;font-size:7px;color:#74785b;margin-left:8px}.saved-address-card>div:last-child{display:flex;gap:15px}.saved-address-card .remove-link{align-self:center}
+@media(max-width:620px){.banner-form{grid-template-columns:1fr 1fr}.banner-form .span-two,.banner-form h2,.banner-form-actions,.banner-live-preview{grid-column:1/-1}.banner-live-preview{min-height:180px}.banner-live-preview b{font-size:26px;max-width:85%}.banner-list-head{display:block}.banner-list-head>span{display:block;margin-top:8px;line-height:1.5}.banner-admin-grid{grid-template-columns:1fr}.banner-admin-info{align-items:flex-start}.banner-admin-info>div:last-child{gap:8px}.saved-address-card{align-items:flex-start;gap:10px}.saved-address-card>div:last-child{flex-direction:column;align-items:flex-end}}
+
+.banner-image-picker {
+  grid-column: 1 / -1;
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px dashed #bdc7d8;
+  border-radius: 10px;
+  background: #f8faff;
+  overflow-wrap: anywhere;
+}
+.banner-image-picker input[type="file"] { height: auto; padding: 8px; background: white; }
+.banner-image-picker input::file-selector-button { margin-right: 10px; cursor: pointer; }
+.banner-image-picker small { color: #535e70; }
+.admin-list-image { display: inline-block; width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #f1f4fa; vertical-align: middle; }
+.admin-image-empty { display: grid; place-items: center; color: #7a8497; font-size: 9px; text-align: center; }
+.admin-product-name { display: inline-flex; align-items: center; gap: 12px; min-width: 170px; }
+.admin-edit-image { width: 120px; height: 120px; object-fit: contain; border-radius: 10px; background: #f1f4fa; }
+.admin-layout { font-size: 14px; }
+.admin-sidebar nav a { font-size: 13px; }
+.admin-brand small, .admin-sidebar-bottom small, .metric-card small, .admin-panel > small, .admin-panel-head small { font-size: 10px; }
+.admin-sidebar-bottom a, .admin-topbar, .admin-topbar > span:last-child, .admin-date { font-size: 12px; }
+.admin-page-heading .page-title p, .admin-page-heading p, .admin-task-row small, .admin-note { font-size: 13px; }
+.admin-task-row b, .admin-quick-links a, .admin-panel-head > a, .metric-card span { font-size: 13px; }
+.admin-table th { font-size: 11px; }
+.admin-table td { font-size: 13px; }
+.admin-table-tools, .admin-table-tools > span, .admin-table-tools input { font-size: 13px; }
+.admin-create-form label, .admin-create-form input, .admin-create-form select, .admin-create-form textarea { font-size: 13px; }
+.admin-primary, .row-actions button, .row-actions select, .row-actions a { font-size: 12px; }
+@media (max-width: 620px) {
+  .admin-sidebar nav a { font-size: 12px; }
+  .admin-topbar, .admin-page-heading .page-title p, .admin-page-heading p { font-size: 12px; }
+  .admin-primary { font-size: 12px; }
+}
+
+/* Store Studio follows the storefront's navy and royal blue palette. */
+.admin-layout, .admin-gate { background: #f5f7fc; color: #172d57; }
+.admin-sidebar { background: linear-gradient(165deg, #10234d, #234895); color: #fff; }
+.admin-brand, .admin-brand > span, .admin-brand small { color: #fff; }
+.admin-sidebar nav a { color: #dbe6ff; border-radius: 9px; }
+.admin-sidebar nav a:hover, .admin-sidebar nav a:focus-visible { background: #ffffff26; color: #fff; }
+.admin-sidebar nav a > span, .admin-sidebar-bottom a { color: #bcd0ff; }
+.admin-sidebar-bottom small { color: #95b4f1; }
+.admin-topbar { background: #fff; border-bottom-color: #dce5f4; color: #21447e; }
+.admin-topbar > span:last-child, .admin-page-heading p, .admin-page-heading .page-title p { color: #617390; }
+.admin-topbar i { background: #3a73db; }
+.admin-page-heading h1, .admin-page-heading .page-title h1, .admin-panel h2, .admin-create-form h2 { color: #172d57; }
+.metric-card, .admin-panel, .admin-create-form, .admin-table-tools, .admin-table-wrap, .banner-admin-card { background: #fff; border-color: #dce5f4; border-radius: 12px; box-shadow: 0 6px 22px #172f600a; }
+.metric-card strong, .admin-task-row strong { color: #214da4; }
+.metric-card small, .metric-card span, .admin-panel > small, .admin-panel-head small, .admin-date, .admin-table-tools > span { color: #60799e; }
+.admin-panel-head > a, .admin-quick-links a, .admin-table td a { color: #2852b9; }
+.admin-task-row, .admin-quick-links a { border-color: #e3eaf5; }
+.admin-primary { background: linear-gradient(110deg, #17356f, #294fb2); border-radius: 8px; color: #fff; }
+.admin-primary:hover { background: #17356f; }
+.admin-table th { background: #edf3ff; color: #2852a1; }
+.admin-table td { border-top-color: #e3eaf5; color: #243c61; }
+.row-actions button, .row-actions select, .row-actions a { background: #f5f8ff; border-color: #d7e2f5; border-radius: 6px; color: #214a94; }
+.row-actions button:hover, .row-actions a:hover { background: #e7efff; }
+.admin-create-form label { color: #334e77; }
+.admin-create-form input, .admin-create-form select, .admin-create-form textarea, .admin-table-tools input { border-color: #d7e2f5; background: #f9fbff; color: #172d57; }
+.admin-create-form input:focus, .admin-create-form select:focus, .admin-create-form textarea:focus { border-color: #4b73cf; outline: 2px solid #dce8ff; }
+.admin-note { background: #eaf0fc; color: #3b557d; border-radius: 8px; }

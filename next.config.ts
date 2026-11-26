@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    const apiOrigin = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+    return apiOrigin ? [{
+      source: "/store-branding.json",
+      destination: `${apiOrigin}/api/v1/branding`,
+    }, {
+      source: "/media/:folder(banners|logos)/:filename",
+      destination: `${apiOrigin}/media/:folder/:filename`,
+    }] : [];
+  },
   experimental: {
     agentFeedback: true,
   },
@@ -9,7 +18,7 @@ const nextConfig: NextConfig = {
   partialPrefetching: true,
   turbopack: {
     rules: {
-      "*.css": {
+      "globals.css": {
         loaders: ["@tailwindcss/turbopack"],
         as: "*.css",
       },
