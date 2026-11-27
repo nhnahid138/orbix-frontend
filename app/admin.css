@@ -78,3 +78,38 @@
   border-radius: 10px;
   background: #f6f8fc;
 }
+
+.admin-create-photos {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid #dce4f1;
+  border-radius: 12px;
+}
+
+.admin-create-photos legend {
+  padding-inline: 6px;
+  font-weight: 700;
+}
+
+.admin-create-photos > button {
+  justify-self: start;
+}
+
+.admin-create-photo-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+}
+
+.admin-create-photo-row label {
+  flex: 1 1 210px;
+  min-width: 0;
+}
+
+.admin-create-photo-row input {
+  width: 100%;
+  min-width: 0;
+}

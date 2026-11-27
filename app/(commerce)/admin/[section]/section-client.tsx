@@ -2,7 +2,7 @@
 
 import { productImageUrl } from "../../../../lib/product-image";
 import Link from "next/link";
-import { FormEvent,useCallback,useEffect,useState } from "react";
+import { FormEvent,useCallback,useEffect,useRef,useState } from "react";
 import { useParams } from "next/navigation";
 import { api,errorMessage } from "../../../../lib/api";
 
@@ -28,6 +28,39 @@ function categoryOptions(categories: Row[], excludedId?: number) {
 
 type VariantRow=VariantPricing & {id:number;sku:string;name?:string|null;stockQuantity:number};
 type Row={ [key:string]:unknown; id?:number; orderNumber?:string; name?:string; status?:string; orderStatus?:string; isActive?:boolean; variants?:VariantRow[]; images?:{url:string;alt?:string|null;sortOrder?:number}[]; parent?: {id:number; name:string} | null; };
+function CreateProductPhotoFields({ busy }: { busy: boolean }) {
+  const [fields, setFields] = useState([0]);
+  const nextField = useRef(1);
+
+  function addPhotoField() {
+    const id = nextField.current++;
+    setFields((current) => [...current, id]);
+  }
+
+  return (
+    <fieldset className="admin-create-photos span-two" disabled={busy}>
+      <legend>Product photos</legend>
+      <small>The first selected photo will appear on product cards.</small>
+      {fields.map((id, index) => (
+        <div className="admin-create-photo-row" key={id}>
+          <label>
+            Photo {index + 1}
+            <input name="imageFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif" />
+          </label>
+          {fields.length > 1 && (
+            <button type="button" className="text-button" aria-label={`Remove photo field ${index + 1}`}
+              onClick={() => setFields((current) => current.filter((field) => field !== id))}>
+              Remove
+            </button>
+          )}
+        </div>
+      ))}
+      <button type="button" className="text-button" onClick={addPhotoField}>＋ Add more photo</button>
+      <label>Add an image URL<input name="imageUrl" type="url" placeholder="https://…"/></label>
+    </fieldset>
+  );
+}
+
 async function uploadProductImages(form: FormData, name: string) {
   const images: { url: string; alt: string }[] = [];
   for (const entry of form.getAll("imageFile")) {
@@ -138,7 +171,7 @@ async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();s
 async function submitStock(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!stockTarget)return;setBusy(true);const form=new FormData(event.currentTarget);try{await api(`/admin/products/${stockTarget.id}/stock-adjustments`,{method:"POST",body:JSON.stringify({variantId:Number(form.get("variantId")),quantityDelta:Number(form.get("quantityDelta")),reason:form.get("reason"),note:form.get("note")||undefined})});setNotice("Stock adjustment saved to the inventory ledger.");setStockTarget(null);load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
 if(!details)return <div className="admin-page"><h1>Section not found</h1><Link href="/admin">Back to overview</Link></div>;
 const filtered=rows.filter((row)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase()));
-return <div className="admin-page"><div className="admin-page-heading"><div><small>{details.eyebrow}</small><h1>{details.title}</h1><p>Manage this part of the Orbix store.</p></div>{["products","categories","coupons"].includes(section)&&<button className="admin-primary" disabled={busy} onClick={()=>{setEditingCategory(null);setShowForm((value)=>!value);setNotice("");setError("")}}>{showForm?"Close":"＋ Create new"}</button>}</div>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="inline-success">{notice}</div>}{showForm&&<form key={editingCategory?.id ?? "create"} className="admin-create-form" onSubmit={submit}><h2>{section==="products"?"Add a product":section==="categories"?(editingCategory?"Edit category":"Create category"):"Create a coupon"}</h2>{section==="products"?<><label>Product name<input name="name" required minLength={1}/></label><label>SKU<input name="sku" required/></label><PricingFields/><label>Feature on homepage<input name="featured" type="checkbox"/></label><label>Opening stock<input name="stock" type="number" min="0" required/></label><label>Category / subcategory<select name="category"><option value="">Uncategorized</option>{categoryOptions(categories)}</select></label><label>Upload product photos<input name="imageFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"/></label><label>Add an image URL<input name="imageUrl" type="url" placeholder="https://…"/></label><label className="span-two">Description<textarea name="description" rows={3}/></label></>:section==="categories"?<>
+return <div className="admin-page"><div className="admin-page-heading"><div><small>{details.eyebrow}</small><h1>{details.title}</h1><p>Manage this part of the Orbix store.</p></div>{["products","categories","coupons"].includes(section)&&<button className="admin-primary" disabled={busy} onClick={()=>{setEditingCategory(null);setShowForm((value)=>!value);setNotice("");setError("")}}>{showForm?"Close":"＋ Create new"}</button>}</div>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="inline-success">{notice}</div>}{showForm&&<form key={editingCategory?.id ?? "create"} className="admin-create-form" onSubmit={submit}><h2>{section==="products"?"Add a product":section==="categories"?(editingCategory?"Edit category":"Create category"):"Create a coupon"}</h2>{section==="products"?<><label>Product name<input name="name" required minLength={1}/></label><label>SKU<input name="sku" required/></label><PricingFields/><label>Feature on homepage<input name="featured" type="checkbox"/></label><label>Opening stock<input name="stock" type="number" min="0" required/></label><label>Category / subcategory<select name="category"><option value="">Uncategorized</option>{categoryOptions(categories)}</select></label><CreateProductPhotoFields busy={busy}/><label className="span-two">Description<textarea name="description" rows={3}/></label></>:section==="categories"?<>
   <label>Parent category<select name="parentId" defaultValue={editingCategory?.parent?.id ?? ""}><option value="">None (top-level category)</option>{categoryOptions(rows, editingCategory?.id)}</select></label>
   <label>Category name<input name="name" defaultValue={editingCategory?.name ?? ""} required maxLength={100} pattern=".*\S.*"/></label>
   <label>URL slug<input name="slug" defaultValue={String(editingCategory?.slug ?? "")} maxLength={120}/></label>
