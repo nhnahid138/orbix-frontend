@@ -117,7 +117,28 @@ export default function ProductDetailPage() {
           </button>
           {wishlistError && <p role="alert">{wishlistError}</p>}
           <ul className={styles.benefits}>
-            <li>Genuine gadgets</li><li>Delivery across Bangladesh</li><li>Secure checkout</li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m12 2 8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/>
+                <path d="m8 11.5 2.7 2.7 5.3-5.4"/>
+              </svg>
+              <span>Genuine gadgets</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M3 16H2V5h12v11H8m6-9h4l4 5v4h-2m-6 0h1m0-5h6"/>
+                <circle cx="5.5" cy="16.5" r="2.5"/>
+                <circle cx="17.5" cy="16.5" r="2.5"/>
+              </svg>
+              <span>Delivery across Bangladesh</span>
+            </li>
+            <li>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="4" y="10" width="16" height="12" rx="3"/>
+                <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3m-4.5 5v2"/>
+              </svg>
+              <span>Secure checkout</span>
+            </li>
           </ul>
           <Link href="/shipping" className="under-link">Delivery, returns &amp; care</Link>
         </div>

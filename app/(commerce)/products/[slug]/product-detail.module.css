@@ -158,8 +158,46 @@
 .quantity :global(.quantity-control) span { font-size: 14px; }
 .wishlist { min-height: 44px; margin-top: 8px; padding: 0; color: #e1ebff; background: none; border: 0; cursor: pointer; }
 
-.benefits { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; margin: 4px 0; padding: 14px 0; border-top: 1px solid #ffffff32; }
-.benefits li { background: #ffffff15; color: #e5edff; padding: 6px 9px; border-radius: 8px; font-size: 12px; }
+.benefits {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 118px), 1fr));
+  gap: 8px;
+  list-style: none;
+  margin: 4px 0;
+  padding: 14px 0;
+  border-top: 1px solid #ffffff32;
+}
+
+.benefits li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px;
+  border: 1px solid #ffffff24;
+  border-radius: 12px;
+  background: #ffffff10;
+  color: #f0f5ff;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.benefits svg {
+  box-sizing: content-box;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  padding: 6px;
+  border-radius: 8px;
+  background: #bbd3ff24;
+  color: #d7e7ff;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .info > a { color: #e1ebff; text-decoration: underline; text-underline-offset: 3px; }
 
 .overview, .reviews {
