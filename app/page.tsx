@@ -1,3 +1,4 @@
+import { coverImageUrl } from "../lib/cover-image";
 import { productImageUrl } from "../lib/product-image";
 import Storefront, { type StoreProduct } from "./storefront";
 import { Suspense } from "react";
@@ -59,15 +60,10 @@ async function getBanners(): Promise<StoreBanner[]> {
     if (!response.ok) return process.env.NODE_ENV === "production" ? [] : fallbackBanners;
     const data = await response.json();
     if (!Array.isArray(data)) return [];
-    return data.map((banner: StoreBanner) => {
-      const image = new URL(banner.imageUrl, base);
-      // Serve files from our upload directory through the storefront, including older localhost URLs.
-      if (/^\/media\/banners\/[a-f0-9-]+\.(jpg|png|webp|avif)$/i.test(image.pathname)
-        && (image.origin === new URL(base).origin || ["localhost", "127.0.0.1", "[::1]"].includes(image.hostname))) {
-        return { ...banner, imageUrl: image.pathname };
-      }
-      return banner;
-    });
+    return data.map((banner: StoreBanner) => ({
+      ...banner,
+      imageUrl: coverImageUrl(banner.imageUrl, "banners"),
+    }));
   } catch {
     return process.env.NODE_ENV === "production" ? [] : fallbackBanners;
   }

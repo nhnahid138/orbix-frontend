@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
       source: "/store-branding.json",
       destination: `${apiOrigin}/api/v1/branding`,
     }, {
-      source: "/media/:folder(banners|logos)/:filename",
+      source: "/media/:folder(banners|logos|categories)/:filename",
       destination: `${apiOrigin}/media/:folder/:filename`,
     }] : [];
   },

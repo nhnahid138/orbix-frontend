@@ -224,6 +224,9 @@ html { scroll-padding-top: 155px; }
 .category-crumbs { margin: 0 0 18px; color: #526987; font-size: 13px; }
 .category-crumbs a:hover { color: #294fb2; text-decoration: underline; }
 .category-hero {
+  display: block;
+  width: 100%;
+  object-fit: cover;
   height: clamp(210px, 30vw, 390px);
   border-radius: 22px;
   background-color: #edf2fa;
@@ -363,4 +366,16 @@ html { scroll-padding-top: 155px; }
   .store-benefits > div { flex-direction: column; justify-content: flex-start; gap: 8px; padding-inline: 5px; text-align: center; }
   .store-benefits svg { width: 40px; height: 40px; border-radius: 12px; padding: 8px; }
   html { scroll-padding-top: 185px; }
+}
+
+@media (max-width: 1024px) {
+  .hero.home-banner { display: block; min-height: 0; height: auto; padding: 0; }
+  .home-banner > img.hero-image, img.category-hero {
+    display: block;
+    position: static;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    transform: none;
+  }
 }
