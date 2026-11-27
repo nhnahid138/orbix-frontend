@@ -6,7 +6,7 @@ export function coverImageUrl(value: string, folder: "banners" | "categories") {
     const host = new URL(base).hostname;
     if ([host, "api.orbixbd.tech", "localhost", "127.0.0.1", "[::1]"].includes(image.hostname)
       && image.pathname.startsWith(`/media/${folder}/`)) {
-      return image.pathname + image.search;
+      return new URL(image.pathname + image.search, base).href;
     }
   } catch {
     return value;

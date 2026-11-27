@@ -1,3 +1,4 @@
+import { coverImageUrl } from "../lib/cover-image";
 import Link from "next/link";
 import type { StoreCategory } from "./page";
 
@@ -54,7 +55,7 @@ export default function FeaturedCategories({
                 className="featured-category"
               >
                 {mainImageUrl ? (
-                  <span aria-hidden="true" className="category-main-image" style={{ backgroundImage: `url("${mainImageUrl}")` }} />
+                  <span aria-hidden="true" className="category-main-image" style={{ backgroundImage: `url("${coverImageUrl(mainImageUrl, "categories")}")` }} />
                 ) : index >= 0 ? (
                   <span
                     aria-hidden="true"
