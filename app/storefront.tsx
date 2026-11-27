@@ -20,6 +20,56 @@ function taka(value: number) {
   return new Intl.NumberFormat("en-BD", { maximumFractionDigits: 2 }).format(value);
 }
 
+function RedOrbit() {
+  return <span aria-hidden="true" className="home-red-orbit-ring" />;
+}
+
+function HomeBenefits() {
+  return (
+    <section className="store-benefits" aria-label="Store benefits">
+      <div>
+        <span className="home-red-orbit benefit-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m12 2 8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z" />
+            <path d="m8 11.5 2.7 2.7 5.3-5.4" />
+          </svg>
+          <RedOrbit />
+        </span>
+        <span>100% Genuine Products</span>
+      </div>
+      <div>
+        <span className="home-red-orbit benefit-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 16H2V5h12v11H8m6-9h4l4 5v4h-2m-6 0h1m0-5h6" />
+            <circle cx="5.5" cy="16.5" r="2.5" /><circle cx="17.5" cy="16.5" r="2.5" />
+          </svg>
+          <RedOrbit />
+        </span>
+        <span>Super Fast Delivery</span>
+      </div>
+      <div>
+        <span className="home-red-orbit benefit-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 4h9l9 9-8 8L3 11z" /><circle cx="7.5" cy="8" r="1" />
+          </svg>
+          <RedOrbit />
+        </span>
+        <span>Best Price in Bangladesh</span>
+      </div>
+      <div>
+        <span className="home-red-orbit benefit-icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="4" y="10" width="16" height="12" rx="3" />
+            <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3m-4.5 5v2" />
+          </svg>
+          <RedOrbit />
+        </span>
+        <span>Secure Payment</span>
+      </div>
+    </section>
+  );
+}
+
 function HomeProductCard({ product, index, onBuy, onAdded }: { product: StoreProduct; index: number; onBuy: (product: StoreProduct, quantity: number) => void; onAdded: (name: string) => void }) {
   const [quantity, setQuantity] = useState(1);
   const add = () => { if (!product.variantId) return; addGuestLine({ variantId: product.variantId, productId: product.productId ?? Number(product.id), name: product.name, slug: product.slug, image: product.image, priceMinor: Math.round(product.price * 100), quantity }); onAdded(product.name); };
@@ -51,7 +101,7 @@ function HomeProductCard({ product, index, onBuy, onAdded }: { product: StorePro
         </div>
         <div className="trend-actions">
           <button disabled={!product.variantId} onClick={add}>Add to cart</button>
-          <button className="home-red-orbit" disabled={!product.variantId} onClick={() => onBuy(product, quantity)}>Buy now</button>
+          <button className="home-red-orbit" disabled={!product.variantId} onClick={() => onBuy(product, quantity)}>Buy now<RedOrbit /></button>
         </div>
       </div>
     </article>
@@ -107,19 +157,14 @@ export default function Storefront({ products, hero, categories }: { products: S
         <a href="#top" className="wordmark"><BrandSign /></a>
         <ProductSearch />
         <CategoryNav />
-        <div className="header-actions"><Link className="account-link" href={user?(user.role==="admin"?"/admin":"/account"):"/login"}>{user?(user.role==="admin"?"Studio":"Account"):"Sign in"}</Link><Link className="bag-button home-red-orbit" href="/cart" aria-label={`Shopping bag, ${cartCount} items`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span>Bag <b>{cartCount}</b></span></Link></div>
+        <div className="header-actions"><Link className="account-link" href={user?(user.role==="admin"?"/admin":"/account"):"/login"}>{user?(user.role==="admin"?"Studio":"Account"):"Sign in"}</Link><Link className="bag-button home-red-orbit" href="/cart" aria-label={`Shopping bag, ${cartCount} items`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span>Bag <b>{cartCount}</b></span><RedOrbit /></Link></div>
       </header>
 
       </div>
       {hero}
 
 
-      <section className="store-benefits" aria-label="Store benefits">
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z"/><path d="m8 11.5 2.7 2.7 5.3-5.4"/></svg><span>100% Genuine Products</span></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16H2V5h12v11H8m6-9h4l4 5v4h-2m-6 0h1m0-5h6"/><circle cx="5.5" cy="16.5" r="2.5"/><circle cx="17.5" cy="16.5" r="2.5"/></svg><span>Super Fast Delivery</span></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h9l9 9-8 8L3 11z"/><circle cx="7.5" cy="8" r="1"/></svg><span>Best Price in Bangladesh</span></div>
-        <div><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="12" rx="3"/><path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3m-4.5 5v2"/></svg><span>Secure Payment</span></div>
-      </section>
+      <HomeBenefits />
 
       {categories}
 
@@ -135,35 +180,7 @@ export default function Storefront({ products, hero, categories }: { products: S
       )}
       <section className="section shop-section" id="shop"><div className="section-heading shop-heading"><div><h2>All <span>Products</span></h2></div><div className="shop-tools"><label className="search-field"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="shop-search" placeholder="Find your thing" value={searchTerm} onChange={(event) => setSearchTerm(event.target.value)} /></label><Link className="text-link desktop-link" href="/products">Shop all <span>↗</span></Link></div></div><div className="filter-row">{["All gadgets", ...new Set(products.map(product => product.category))].map((filter) => <button onClick={() => setActiveFilter(filter)} className={activeFilter === filter ? "filter active" : "filter"} key={filter}>{filter}</button>)}</div><div className="product-grid">{visibleProducts.length ? visibleProducts.map((product,index)=><HomeProductCard key={product.id} product={product} index={index} onBuy={buyNow} onAdded={(name)=>setNotice(`${name} added to cart.`)}/>) : <div className="empty-products">More great gadgets are on the way.</div>}</div><div className="mobile-shop-all"><Link className="button button-outline" href="/products">Shop all gadgets <span>↗</span></Link></div></section>
 
-      <section className="store-benefits" aria-label="Store benefits">
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m12 2 8 3v6c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V5z" />
-            <path d="m8 11.5 2.7 2.7 5.3-5.4" />
-          </svg>
-          <span>100% Genuine Products</span>
-        </div>
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 16H2V5h12v11H8m6-9h4l4 5v4h-2m-6 0h1m0-5h6" />
-            <circle cx="5.5" cy="16.5" r="2.5" /><circle cx="17.5" cy="16.5" r="2.5" />
-          </svg>
-          <span>Super Fast Delivery</span>
-        </div>
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M3 4h9l9 9-8 8L3 11z" /><circle cx="7.5" cy="8" r="1" />
-          </svg>
-          <span>Best Price in Bangladesh</span>
-        </div>
-        <div>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="4" y="10" width="16" height="12" rx="3" />
-            <path d="M7.5 10V7a4.5 4.5 0 0 1 9 0v3m-4.5 5v2" />
-          </svg>
-          <span>Secure Payment</span>
-        </div>
-      </section>
+      <HomeBenefits />
 
       <section className="contact-band" aria-labelledby="contact-heading">
         <div>
