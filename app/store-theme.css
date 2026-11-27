@@ -391,7 +391,7 @@ html { scroll-padding-top: 155px; }
   isolation: isolate;
 }
 
-button.home-red-orbit:enabled::after {
+.home-red-orbit:not(:disabled)::after {
   position: absolute;
   inset: -2px;
   padding: 3px;
@@ -420,30 +420,6 @@ button.home-red-orbit:enabled::after {
   border-radius: 10px;
 }
 
-.bag-button .home-bag-orbit {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  color: #ff3043;
-  stroke-width: 3px;
-}
-
-.home-bag-orbit rect {
-  width: calc(100% - 4px);
-  height: calc(100% - 4px);
-  stroke-dasharray: 24 76;
-  stroke-linecap: round;
-  filter: drop-shadow(0 0 2px #ff3043a0);
-  animation: home-bag-orbit 3s linear infinite;
-}
-
-@keyframes home-bag-orbit {
-  to { stroke-dashoffset: -100; }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  button.home-red-orbit:enabled::after,
-  .home-bag-orbit rect { animation: none; }
+  .home-red-orbit:not(:disabled)::after { animation: none; }
 }

@@ -107,7 +107,7 @@ export default function Storefront({ products, hero, categories }: { products: S
         <a href="#top" className="wordmark"><BrandSign /></a>
         <ProductSearch />
         <CategoryNav />
-        <div className="header-actions"><Link className="account-link" href={user?(user.role==="admin"?"/admin":"/account"):"/login"}>{user?(user.role==="admin"?"Studio":"Account"):"Sign in"}</Link><Link className="bag-button home-red-orbit" href="/cart" aria-label={`Shopping bag, ${cartCount} items`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span>Bag <b>{cartCount}</b></span><svg className="home-bag-orbit" aria-hidden="true"><rect x="2" y="2" rx="8" pathLength="100"/></svg></Link></div>
+        <div className="header-actions"><Link className="account-link" href={user?(user.role==="admin"?"/admin":"/account"):"/login"}>{user?(user.role==="admin"?"Studio":"Account"):"Sign in"}</Link><Link className="bag-button home-red-orbit" href="/cart" aria-label={`Shopping bag, ${cartCount} items`}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14l1 13H4L5 8Z"/><path d="M9 9V6a3 3 0 0 1 6 0v3"/></svg><span>Bag <b>{cartCount}</b></span></Link></div>
       </header>
 
       </div>
