@@ -379,3 +379,42 @@ html { scroll-padding-top: 155px; }
     transform: none;
   }
 }
+
+@property --home-orbit-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.home-red-orbit {
+  position: relative;
+  isolation: isolate;
+}
+
+.home-red-orbit:not(:disabled)::after {
+  position: absolute;
+  inset: -2px;
+  padding: 2px;
+  border-radius: inherit;
+  content: "";
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--home-orbit-angle, 0deg),
+    transparent 45%,
+    #ff304333 70%,
+    #ff3043 89%,
+    #ffabb1 96%,
+    transparent 100%
+  );
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  animation: home-red-orbit 3s linear infinite;
+}
+
+@keyframes home-red-orbit {
+  to { --home-orbit-angle: 1turn; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-red-orbit:not(:disabled)::after { animation: none; }
+}
