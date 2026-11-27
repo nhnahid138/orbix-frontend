@@ -103,7 +103,7 @@ export function StoreFooter({ preview }: { preview?: Branding }) {
         <section>
           {!!value.locations.length && <><h2>{value.locationHeading}</h2><ul className="store-outlets">{value.locations.map((outlet,i)=><li key={i}><strong>{outlet.href ? <a href={outlet.href}>{outlet.label}</a> : outlet.label}</strong>{outlet.detail && <p>{outlet.detail}</p>}</li>)}</ul></>}
           <div className="store-whatsapp">
-            <h2>Call us</h2>
+            <h2><span>Call us</span></h2>
             <a href={`https://wa.me/${whatsappInternational}`} target="_blank" rel="noopener noreferrer" aria-label={`Message ${value.whatsapp || "01581633218"} on WhatsApp`}>
               <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3 20.5l1.5-4.7A8.5 8.5 0 1 1 20.5 11.6Z"/>

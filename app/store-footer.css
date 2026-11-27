@@ -52,7 +52,34 @@
 .store-social-icons a:hover { color: #193d80; background: white; }
 .store-social-icons span { opacity: .5; }
 .store-whatsapp { margin-top: 20px; }
-.store-whatsapp h2 { margin-bottom: 10px; }
+.store-whatsapp h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.store-whatsapp h2::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: #4ade80;
+  box-shadow: 0 0 8px #4ade8070;
+}
+
+.store-whatsapp h2 span {
+  animation: footer-call-blink 1.6s ease-in-out infinite;
+}
+
+@keyframes footer-call-blink {
+  50% { opacity: .55; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .store-whatsapp h2 span { animation: none; }
+}
 .store-whatsapp a { display: inline-flex; align-items: center; gap: 9px; color: white; font-weight: 600; }
 .store-whatsapp svg { color: #6ee7a2; }
 .store-whatsapp a:hover { color: #b8ffd0; }
