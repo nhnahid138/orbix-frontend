@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import Link from "next/link";
+import styles from "./product-detail.module.css";
 import { api, errorMessage, formatMoney } from "../../../../lib/api";
 import { addGuestLine } from "../../../../lib/guest-cart";
 import { useWishlist } from "../../../../lib/wishlist";
@@ -14,12 +15,21 @@ type Product = { id:number; name:string; slug:string; description:string; catego
 type Review = { id:number; rating:number; body:string; user?:{name:string}; createdAt:string };
 export default function ProductDetailPage() {
   const params = useParams<{slug:string}>(); const router=useRouter(); const {user}=useSession(); const [product,setProduct]=useState<Product|null>(null); const [reviews,setReviews]=useState<Review[]>([]); const [variantIndex,setVariantIndex]=useState(0); const [imageIndex,setImageIndex]=useState(0); const [quantity,setQuantity]=useState(1); const [error,setError]=useState(""); const [notice,setNotice]=useState("");
-  useEffect(()=>{let live=true; api<Product>(`/products/${encodeURIComponent(params.slug)}`).then((data)=>{if(live){setProduct(data);if(data.id) api<{items:Review[]}>(`/products/${data.id}/reviews`).then((result)=>live&&setReviews(result.items??[])).catch(()=>{});}}).catch((reason)=>live&&setError(errorMessage(reason)));return()=>{live=false};},[params.slug]);
+  useEffect(()=>{let live=true; api<Product>(`/products/${encodeURIComponent(params.slug)}`).then((data)=>{if(live){setProduct(data);setImageIndex(0);setVariantIndex(0);setQuantity(1);setReviews([]);if(data.id) api<{items:Review[]}>(`/products/${data.id}/reviews`).then((result)=>live&&setReviews(result.items??[])).catch(()=>{});}}).catch((reason)=>live&&setError(errorMessage(reason)));return()=>{live=false};},[params.slug]);
   const { items: wishlist, toggle: toggleWishlist } = useWishlist(user?.id);
   const [wishlistError, setWishlistError] = useState("");
   if(error) return <div className="store-page"><div className="inline-error">{error}</div><Link className="under-link" href="/products">← Back to all gadgets</Link></div>;
   if(!product) return <div className="store-page"><div className="skeleton-detail"/></div>;
-  const variant=product.variants[variantIndex]; const image=productImageUrl(product.images?.[imageIndex]?.url);
+  const variant = product.variants[variantIndex];
+  const photos = product.images ?? [];
+  const selectedPhoto = photos[imageIndex];
+  const image = productImageUrl(selectedPhoto?.url);
+  const available = !!variant && variant.stockQuantity > 0;
+  const totalPhotos = photos.length;
+  const onSale = variant?.compareAtMinor != null && variant.compareAtMinor > variant.priceMinor;
+  function movePhoto(offset: number) {
+    setImageIndex((current) => (current + offset + totalPhotos) % totalPhotos);
+  }
   const isSaved = wishlist.some((item) => item.slug === product.slug);
   function saveProduct() {
     if (!product) return;
@@ -37,5 +47,79 @@ export default function ProductDetailPage() {
   async function submitReview(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!user){setNotice("Sign in with the account used for this purchase to leave a review.");return;}const reviewForm=event.currentTarget;const form=new FormData(reviewForm);try{await api(`/products/${product!.id}/reviews`,{method:"POST",body:JSON.stringify({variantId:variant?.id,rating:Number(form.get("rating")),title:form.get("title")||undefined,body:form.get("body")||undefined})});setNotice("Thanks. Your review is sent for moderation.");reviewForm.reset();}catch(reason){setError(errorMessage(reason));}}
   function addToBag(){if(!variant)return;addGuestLine({variantId:variant.id,productId:product!.id,name:product!.name,slug:product!.slug,image:image??"",sku:variant.sku,priceMinor:variant.priceMinor,quantity,attributes:variant.attributes});setNotice("Added to your cart.")}
   function buyNow(){if(!variant)return;addGuestLine({variantId:variant.id,productId:product!.id,name:product!.name,slug:product!.slug,image:image??"",sku:variant.sku,priceMinor:variant.priceMinor,quantity,attributes:variant.attributes});router.push("/checkout")}
-  return <div className="store-page"><div className="breadcrumbs"><Link href="/">Home</Link> / <Link href="/products">Shop</Link> / {product.name}</div><section className="product-detail"><div className="detail-gallery"><div className="detail-image" style={image?{backgroundImage:`url('${image}')`}:undefined}/><div className="detail-thumbs">{product.images?.map((item,index)=><button key={item.url} aria-label={`View image ${index+1}`} style={{backgroundImage:`url('${productImageUrl(item.url)}')`}} className={index===imageIndex?"selected":""} onClick={()=>setImageIndex(index)}/>)}</div></div><div className="detail-info"><small>{product.category?.name??"ORBIX GADGET"}</small><h1>{product.name}</h1><div className="detail-rating">★★★★★ <span>{reviews.length ? `${reviews.length} verified reviews` : "Be the first to review"}</span></div><strong>{variant?formatMoney(variant.priceMinor):"—"}</strong><p className="detail-description">{product.description || "A great gadget, selected for reliable everyday performance. Check the specifications and choose your preferred option below."}</p>{variant?.attributes && Object.keys(variant.attributes).length>0&&<label className="variant-select">Choose an option<select value={variantIndex} onChange={(event)=>setVariantIndex(Number(event.target.value))}>{product.variants.map((item,index)=><option key={item.id} value={index}>{item.name||Object.values(item.attributes).join(" / ")||item.sku}</option>)}</select></label>}<div className="availability">{variant?.stockQuantity>0?<><i/> In stock · ships with care</>:"Currently unavailable"}</div><div className="detail-buy gadget-detail-buy"><div className="quantity-control"><button onClick={()=>setQuantity((n)=>Math.max(1,n-1))}>−</button><span>{quantity}</span><button onClick={()=>setQuantity((n)=>Math.min(variant?.stockQuantity??1,n+1))}>+</button></div><button className="primary-button" disabled={!variant||variant.stockQuantity<1} onClick={addToBag}>Add to cart <span>{variant?formatMoney(variant.priceMinor*quantity):""}</span></button><button className="primary-button buy-now-button" disabled={!variant||variant.stockQuantity<1} onClick={buyNow}>Buy now <span>→</span></button></div><button type="button" className="text-button" aria-pressed={isSaved} onClick={saveProduct}>{isSaved ? "♥ Saved to wishlist" : "♡ Save to wishlist"}</button>{wishlistError && <p role="alert">{wishlistError}</p>}<div className="detail-promises"><p>✓ &nbsp; Genuine gadgets</p><p>⌂ &nbsp; Delivery across Bangladesh</p><p>৳ &nbsp; Secure checkout</p></div><Link href="/shipping" className="under-link">Delivery, returns & care</Link></div></section><section className="reviews-section"><div><small>WHAT CUSTOMERS SAY</small><h2>Reviews.</h2></div><div className="review-feed">{reviews.length?reviews.map((review)=><article key={review.id}><span>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span><p>{review.body}</p><small>{review.user?.name??"Verified customer"} · Verified purchase</small></article>):<p>Reviews appear here after verified customers share their experience.</p>}{user&&<form className="review-form" onSubmit={submitReview}><h3>Share your experience</h3><label>Rating<select name="rating" defaultValue="5">{[5,4,3,2,1].map((rating)=><option key={rating} value={rating}>{rating} stars</option>)}</select></label><label>Title<input name="title" maxLength={180}/></label><label>Your review<textarea name="body" maxLength={5000} rows={4}/></label><button className="primary-button">Send for review <span>→</span></button></form>}</div></section>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="toast" role="status">{notice}<Link href="/cart">View cart</Link><button onClick={()=>setNotice("")}>×</button></div>}</div>;
+  return (
+    <div className={`store-page ${styles.page}`}>
+      <nav className={styles.crumbs} aria-label="Breadcrumb">
+        <Link href="/">Home</Link><span aria-hidden="true">›</span>
+        <Link href="/products">Shop</Link><span aria-hidden="true">›</span>
+        <span aria-current="page">{product.name}</span>
+      </nav>
+      <section className={styles.detail}>
+        <div className={styles.gallery} aria-label="Product photos">
+          <div className={styles.stage}>
+            {image ? (
+              <img className={styles.photo} src={image} alt={selectedPhoto?.alt || product.name} fetchPriority="high" />
+            ) : <p className={styles.noPhoto}>No product photo available</p>}
+            {totalPhotos > 1 && <>
+              <button type="button" className={styles.previous} onClick={() => movePhoto(-1)} aria-label="Previous photo">‹</button>
+              <button type="button" className={styles.next} onClick={() => movePhoto(1)} aria-label="Next photo">›</button>
+              <span className={styles.counter} aria-live="polite">{imageIndex + 1} / {totalPhotos}</span>
+            </>}
+          </div>
+          {totalPhotos > 1 && <div className={styles.thumbnails}>
+            {photos.map((photo, index) => (
+              <button key={index} type="button" aria-label={`View photo ${index + 1}`}
+                aria-pressed={index === imageIndex} onClick={() => setImageIndex(index)}>
+                <img src={productImageUrl(photo.url)} alt="" loading="lazy" />
+              </button>
+            ))}
+          </div>}
+        </div>
+
+        <div className={styles.info}>
+          {product.category && <small className={styles.category}>{product.category.name}</small>}
+          <h1>{product.name}</h1>
+          <div className={styles.price}>
+            <strong>{variant ? formatMoney(variant.priceMinor) : "Price on request"}</strong>
+            {onSale && <del>{formatMoney(variant.compareAtMinor!)}</del>}
+          </div>
+          <p className={styles.stock} data-available={available}>{available ? "In stock" : "Currently unavailable"}</p>
+          {product.description && <p className={styles.description}>{product.description}</p>}
+          {product.variants.length > 1 && (
+            <label className="variant-select">Choose an option
+              <select value={variantIndex} onChange={(event) => {
+                setVariantIndex(Number(event.target.value));
+                setQuantity(1);
+              }}>
+                {product.variants.map((option, index) => (
+                  <option key={option.id} value={index}>{option.name || Object.values(option.attributes ?? {}).join(" / ") || option.sku}</option>
+                ))}
+              </select>
+            </label>
+          )}
+          <div className={styles.purchase}>
+            <div className={styles.quantity}>
+              <span>Quantity</span>
+              <div className="quantity-control" role="group" aria-label="Quantity">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(quantity - 1)}>−</button>
+                <span>{quantity}</span>
+                <button type="button" aria-label="Increase quantity" disabled={!available || quantity >= Math.min(99, variant.stockQuantity)} onClick={() => setQuantity(quantity + 1)}>+</button>
+              </div>
+            </div>
+            <button className="primary-button" disabled={!available} onClick={addToBag}>Add to cart</button>
+            <button className={styles.buyNow} disabled={!available} onClick={buyNow}>Buy now</button>
+          </div>
+          <button type="button" className={styles.wishlist} aria-pressed={isSaved} onClick={saveProduct}>
+            {isSaved ? "♥ Saved to wishlist" : "♡ Save to wishlist"}
+          </button>
+          {wishlistError && <p role="alert">{wishlistError}</p>}
+          <ul className={styles.benefits}>
+            <li>Genuine gadgets</li><li>Delivery across Bangladesh</li><li>Secure checkout</li>
+          </ul>
+          <Link href="/shipping" className="under-link">Delivery, returns &amp; care</Link>
+        </div>
+      </section>
+      <section className="reviews-section"><div><small>WHAT CUSTOMERS SAY</small><h2>Reviews.</h2></div><div className="review-feed">{reviews.length?reviews.map((review)=><article key={review.id}><span>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span><p>{review.body}</p><small>{review.user?.name??"Verified customer"} · Verified purchase</small></article>):<p>Reviews appear here after verified customers share their experience.</p>}{user&&<form className="review-form" onSubmit={submitReview}><h3>Share your experience</h3><label>Rating<select name="rating" defaultValue="5">{[5,4,3,2,1].map((rating)=><option key={rating} value={rating}>{rating} stars</option>)}</select></label><label>Title<input name="title" maxLength={180}/></label><label>Your review<textarea name="body" maxLength={5000} rows={4}/></label><button className="primary-button">Send for review <span>→</span></button></form>}</div></section>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="toast" role="status">{notice}<Link href="/cart">View cart</Link><button onClick={()=>setNotice("")}>×</button></div>}
+    </div>
+  );
 }

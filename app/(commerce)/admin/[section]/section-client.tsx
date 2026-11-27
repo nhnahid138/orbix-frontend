@@ -28,6 +28,20 @@ function categoryOptions(categories: Row[], excludedId?: number) {
 
 type VariantRow=VariantPricing & {id:number;sku:string;name?:string|null;stockQuantity:number};
 type Row={ [key:string]:unknown; id?:number; orderNumber?:string; name?:string; status?:string; orderStatus?:string; isActive?:boolean; variants?:VariantRow[]; images?:{url:string;alt?:string|null;sortOrder?:number}[]; parent?: {id:number; name:string} | null; };
+async function uploadProductImages(form: FormData, name: string) {
+  const images: { url: string; alt: string }[] = [];
+  for (const entry of form.getAll("imageFile")) {
+    if (!(entry instanceof File) || !entry.size) continue;
+    const body = new FormData();
+    body.append("file", entry);
+    const { url } = await api<{ url: string }>("/admin/media/products", { method: "POST", body });
+    images.push({ url, alt: name });
+  }
+  const linkedImage = String(form.get("imageUrl") ?? "").trim();
+  if (linkedImage) images.push({ url: linkedImage, alt: name });
+  return images;
+}
+
 const config:Record<string,{title:string;eyebrow:string;endpoint:string;columns:string[]}>={products:{title:"Products & stock",eyebrow:"CATALOG",endpoint:"/admin/products?limit=100",columns:["name","status","category","variants"]},categories:{title:"Categories",eyebrow:"CATALOG",endpoint:"/admin/categories",columns:["name","mainImageUrl","coverImageUrl","parent","slug","isActive","sortOrder"]},orders:{title:"Orders",eyebrow:"FULFILMENT",endpoint:"/admin/orders?limit=100",columns:["orderNumber","orderStatus","paymentStatus","totalMinor","createdAt"]},coupons:{title:"Coupons",eyebrow:"PROMOTIONS",endpoint:"/admin/coupons",columns:["code","discountType","discountValue","usageCount","isActive"]},reviews:{title:"Customer reviews",eyebrow:"COMMUNITY",endpoint:"/admin/reviews",columns:["product","user","rating","body","status"]},users:{title:"Customers",eyebrow:"PEOPLE",endpoint:"/admin/users?limit=100",columns:["name","email","phoneNumber","status","createdAt"]},"audit-logs":{title:"Store audit trail",eyebrow:"ACCOUNTABILITY",endpoint:"/admin/audit-logs?limit=100",columns:["action","entityType","entityId","actor","createdAt"]}};
 function show(value:unknown,key:string){if(value===null||value===undefined)return "—";if(typeof value==="boolean")return value?"Active":"Hidden";if(typeof value==="object"){if(Array.isArray(value))return `${value.length} items`;if("name"in value)return String(value.name);if("email"in value)return String(value.email);if("slug"in value)return String(value.slug);return JSON.stringify(value)}if(typeof value==="number"&&key.toLowerCase().includes("minor"))return `৳${Math.round(value/100).toLocaleString("en-BD")}`;if(typeof value==="string"&&(key.toLowerCase().includes("date")||key==="createdAt"))return new Date(value).toLocaleDateString("en-BD");return String(value)}
 export default function AdminSectionPage(){const{section}=useParams<{section:string}>();const details=config[section];const[rows,setRows]=useState<Row[]>([]);const[categories,setCategories]=useState<Row[]>([]);const[loading,setLoading]=useState(true);const[error,setError]=useState("");const[notice,setNotice]=useState("");const[search,setSearch]=useState("");const[showForm,setShowForm]=useState(false);const[busy,setBusy]=useState(false);const[stockTarget,setStockTarget]=useState<Row|null>(null);
@@ -65,7 +79,35 @@ async function deleteCategory(row: Row) {
 
 const load=useCallback(()=>{if(!details)return;return api<Row[]|{items:Row[]}>(details.endpoint).then((data)=>setRows(Array.isArray(data)?data:(data as {items:Row[]}).items??[])).catch((e)=>setError(errorMessage(e))).finally(()=>setLoading(false))},[details]);useEffect(()=>{load();if(section==="products")api<Row[]>("/admin/categories").then(setCategories).catch(()=>{})},[load,section]);
 async function action(row:Row,actionName:string,value?:string){setBusy(true);setError("");setNotice("");try{if(section==="orders")await api(`/admin/orders/${row.id}/status`,{method:"PATCH",body:JSON.stringify({status:value})});else if(section==="reviews")await api(`/admin/reviews/${row.id}`,{method:"PATCH",body:JSON.stringify({status:value})});else if(section==="users")await api(`/admin/users/${row.id}/status`,{method:"PATCH",body:JSON.stringify({status:value})});else if(section==="categories"&&actionName==="archive")await api(`/admin/categories/${row.id}`,{method:"DELETE"});else if(section==="coupons"&&actionName==="archive")await api(`/admin/coupons/${row.id}/archive`,{method:"POST"});else if(section==="products"&&actionName==="feature")await api(`/admin/products/${row.id}`,{method:"PATCH",body:JSON.stringify({isFeatured:!row.isFeatured})});else if(section==="products"&&actionName==="archive")await api(`/admin/products/${row.id}`,{method:"PATCH",body:JSON.stringify({status:"archived"})});setNotice("Changes saved and recorded.");await load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
-async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");const form=new FormData(event.currentTarget);try{if(section==="products"){const name=String(form.get("name"));const pricing=readPricing(form);const stock=Number(form.get("stock"));const category=Number(form.get("category"));let image=String(form.get("image"));const imageFile=form.get("imageFile");if(imageFile instanceof File&&imageFile.size>0){const uploadData=new FormData();uploadData.append("file",imageFile);const uploaded=await api<{url:string}>("/admin/media/products",{method:"POST",body:uploadData});image=uploaded.url;}await api("/admin/products",{method:"POST",body:JSON.stringify({name,categoryId:category||undefined,status:"active",isFeatured:form.get("featured")==="on",description:form.get("description"),variants:[{sku:String(form.get("sku")||`${Date.now()}`),...pricing,stockQuantity:stock}],images:image?[{url:image,alt:name,sortOrder:0}]:[]})});}else if(section==="categories"){
+async function saveProductPhotos(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
+  if (!editingProductImage) return;
+  const form = new FormData(event.currentTarget);
+  setBusy(true);
+  setError("");
+  try {
+    const added = await uploadProductImages(form, editingProductImage.name ?? "");
+    if (!added.length) throw new Error("Choose photos or enter an image URL.");
+    const existing = [...(editingProductImage.images ?? [])]
+      .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+    const photos = form.has("replacePhotos") ? added : [...existing, ...added];
+    await api(`/admin/products/${editingProductImage.id}`, {
+      method: "PATCH",
+      body: JSON.stringify({
+        images: photos.map(({ url, alt }, sortOrder) => ({ url, alt, sortOrder })),
+      }),
+    });
+    setEditingProductImage(null);
+    await load();
+    setNotice("Product photos saved.");
+  } catch (reason) {
+    setError(errorMessage(reason));
+  } finally {
+    setBusy(false);
+  }
+}
+
+async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError("");const form=new FormData(event.currentTarget);try{if(section==="products"){const name=String(form.get("name"));const pricing=readPricing(form);const stock=Number(form.get("stock"));const category=Number(form.get("category"));const photos = await uploadProductImages(form, name);await api("/admin/products",{method:"POST",body:JSON.stringify({name,categoryId:category||undefined,status:"active",isFeatured:form.get("featured")==="on",description:form.get("description"),variants:[{sku:String(form.get("sku")||`${Date.now()}`),...pricing,stockQuantity:stock}],images:photos.map((photo,sortOrder)=>({...photo,sortOrder}))})});}else if(section==="categories"){
   const id = editingCategory?.id;
   const saved = await api<Row>(id ? `/admin/categories/${id}` : "/admin/categories", {
     method: id ? "PATCH" : "POST",
@@ -96,7 +138,7 @@ async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();s
 async function submitStock(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!stockTarget)return;setBusy(true);const form=new FormData(event.currentTarget);try{await api(`/admin/products/${stockTarget.id}/stock-adjustments`,{method:"POST",body:JSON.stringify({variantId:Number(form.get("variantId")),quantityDelta:Number(form.get("quantityDelta")),reason:form.get("reason"),note:form.get("note")||undefined})});setNotice("Stock adjustment saved to the inventory ledger.");setStockTarget(null);load()}catch(e){setError(errorMessage(e))}finally{setBusy(false)}}
 if(!details)return <div className="admin-page"><h1>Section not found</h1><Link href="/admin">Back to overview</Link></div>;
 const filtered=rows.filter((row)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase()));
-return <div className="admin-page"><div className="admin-page-heading"><div><small>{details.eyebrow}</small><h1>{details.title}</h1><p>Manage this part of the Orbix store.</p></div>{["products","categories","coupons"].includes(section)&&<button className="admin-primary" disabled={busy} onClick={()=>{setEditingCategory(null);setShowForm((value)=>!value);setNotice("");setError("")}}>{showForm?"Close":"＋ Create new"}</button>}</div>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="inline-success">{notice}</div>}{showForm&&<form key={editingCategory?.id ?? "create"} className="admin-create-form" onSubmit={submit}><h2>{section==="products"?"Add a product":section==="categories"?(editingCategory?"Edit category":"Create category"):"Create a coupon"}</h2>{section==="products"?<><label>Product name<input name="name" required minLength={1}/></label><label>SKU<input name="sku" required/></label><PricingFields/><label>Feature on homepage<input name="featured" type="checkbox"/></label><label>Opening stock<input name="stock" type="number" min="0" required/></label><label>Category / subcategory<select name="category"><option value="">Uncategorized</option>{categoryOptions(categories)}</select></label><label>Upload product image<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif"/></label><label>Or use image URL<input name="image" type="url" placeholder="https://…"/></label><label className="span-two">Description<textarea name="description" rows={3}/></label></>:section==="categories"?<>
+return <div className="admin-page"><div className="admin-page-heading"><div><small>{details.eyebrow}</small><h1>{details.title}</h1><p>Manage this part of the Orbix store.</p></div>{["products","categories","coupons"].includes(section)&&<button className="admin-primary" disabled={busy} onClick={()=>{setEditingCategory(null);setShowForm((value)=>!value);setNotice("");setError("")}}>{showForm?"Close":"＋ Create new"}</button>}</div>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="inline-success">{notice}</div>}{showForm&&<form key={editingCategory?.id ?? "create"} className="admin-create-form" onSubmit={submit}><h2>{section==="products"?"Add a product":section==="categories"?(editingCategory?"Edit category":"Create category"):"Create a coupon"}</h2>{section==="products"?<><label>Product name<input name="name" required minLength={1}/></label><label>SKU<input name="sku" required/></label><PricingFields/><label>Feature on homepage<input name="featured" type="checkbox"/></label><label>Opening stock<input name="stock" type="number" min="0" required/></label><label>Category / subcategory<select name="category"><option value="">Uncategorized</option>{categoryOptions(categories)}</select></label><label>Upload product photos<input name="imageFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"/></label><label>Add an image URL<input name="imageUrl" type="url" placeholder="https://…"/></label><label className="span-two">Description<textarea name="description" rows={3}/></label></>:section==="categories"?<>
   <label>Parent category<select name="parentId" defaultValue={editingCategory?.parent?.id ?? ""}><option value="">None (top-level category)</option>{categoryOptions(rows, editingCategory?.id)}</select></label>
   <label>Category name<input name="name" defaultValue={editingCategory?.name ?? ""} required maxLength={100} pattern=".*\S.*"/></label>
   <label>URL slug<input name="slug" defaultValue={String(editingCategory?.slug ?? "")} maxLength={120}/></label>
@@ -107,7 +149,23 @@ return <div className="admin-page"><div className="admin-page-heading"><div><sma
   <label>Sort order<input name="sortOrder" type="number" step="1" defaultValue={Number(editingCategory?.sortOrder ?? 0)}/></label>
   <label className="span-two">Description<textarea name="description" rows={2} maxLength={3000} defaultValue={String(editingCategory?.description ?? "")}/></label>
   <label>Show on storefront<input type="checkbox" name="isActive" defaultChecked={editingCategory?.isActive ?? true}/></label>
-</>:<><label>Coupon code<input name="code" required/></label><label>Discount type<select name="discountType"><option value="fixed">Fixed amount</option><option value="percent">Percent</option></select></label><label>Discount value<input name="discountValue" type="number" min="1" required/></label><label>Minimum subtotal (BDT)<input name="minimumSubtotal" type="number" min="0" defaultValue="0"/></label><label>Usage limit<input name="usageLimit" type="number" min="1"/></label></>}<button disabled={busy} className="admin-primary">{busy?"Saving…":"Save"}</button></form>}{editingProductImage && <form className="admin-create-form" onSubmit={async event=>{event.preventDefault();setBusy(true);setError("");try{const form=new FormData(event.currentTarget);let image=String(form.get("imageUrl")??"").trim();const file=form.get("imageFile");if(file instanceof File&&file.size>0){const data=new FormData();data.append("file",file);image=(await api<{url:string}>("/admin/media/products",{method:"POST",body:data})).url;}if(!image)throw new Error("Choose an image or enter an image URL.");const existing=editingProductImage.images??[];await api(`/admin/products/${editingProductImage.id}`,{method:"PATCH",body:JSON.stringify({images:[{url:image,alt:String(editingProductImage.name??""),sortOrder:0},...existing.slice(1)]})});setEditingProductImage(null);await load();setNotice("Product image saved.")}catch(reason){setError(errorMessage(reason))}finally{setBusy(false)}}}><h2>Product image · {editingProductImage.name}</h2>{editingProductImage.images?.[0]?.url&&<img className="admin-edit-image" src={productImageUrl(editingProductImage.images[0].url)} alt="Current product image"/>}<label>Upload new image<input name="imageFile" type="file" accept="image/jpeg,image/png,image/webp,image/avif"/></label><label>Or image URL<input name="imageUrl" type="url" placeholder="https://…"/></label><button disabled={busy} className="admin-primary">{busy?"Saving…":"Save image"}</button><button type="button" onClick={()=>setEditingProductImage(null)}>Cancel</button></form>}{editingPrice && <form className="admin-create-form" key={editingPrice.variant.id} onSubmit={async event => {
+</>:<><label>Coupon code<input name="code" required/></label><label>Discount type<select name="discountType"><option value="fixed">Fixed amount</option><option value="percent">Percent</option></select></label><label>Discount value<input name="discountValue" type="number" min="1" required/></label><label>Minimum subtotal (BDT)<input name="minimumSubtotal" type="number" min="0" defaultValue="0"/></label><label>Usage limit<input name="usageLimit" type="number" min="1"/></label></>}<button disabled={busy} className="admin-primary">{busy?"Saving…":"Save"}</button></form>}{editingProductImage && (
+  <form key={editingProductImage.id} className="admin-create-form" onSubmit={saveProductPhotos}>
+    <h2>Product photos · {editingProductImage.name}</h2>
+    <div className="admin-product-photos span-two">
+      {[...(editingProductImage.images ?? [])]
+        .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
+        .map((photo, index) => (
+          <img key={index} src={productImageUrl(photo.url)} alt={photo.alt || `Photo ${index + 1}`} />
+        ))}
+    </div>
+    <label>Upload photos<input name="imageFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/avif"/></label>
+    <label>Add an image URL<input name="imageUrl" type="url" placeholder="https://…"/></label>
+    <label className="span-two"><span><input name="replacePhotos" type="checkbox"/> Replace the existing photos</span></label>
+    <button disabled={busy} className="admin-primary">{busy ? "Saving…" : "Save photos"}</button>
+    <button type="button" disabled={busy} onClick={() => setEditingProductImage(null)}>Cancel</button>
+  </form>
+)}{editingPrice && <form className="admin-create-form" key={editingPrice.variant.id} onSubmit={async event => {
   event.preventDefault(); setBusy(true); setError("");
   try {
     const pricing = readPricing(new FormData(event.currentTarget));

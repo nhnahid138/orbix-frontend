@@ -63,3 +63,18 @@
 .admin-create-form input, .admin-create-form select, .admin-create-form textarea, .admin-table-tools input { border-color: #d7e2f5; background: #f9fbff; color: #172d57; }
 .admin-create-form input:focus, .admin-create-form select:focus, .admin-create-form textarea:focus { border-color: #4b73cf; outline: 2px solid #dce8ff; }
 .admin-note { background: #eaf0fc; color: #3b557d; border-radius: 8px; }
+
+.admin-product-photos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.admin-product-photos img {
+  width: 84px;
+  height: 84px;
+  object-fit: contain;
+  border: 1px solid #dce4f1;
+  border-radius: 10px;
+  background: #f6f8fc;
+}
