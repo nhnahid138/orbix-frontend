@@ -18,6 +18,7 @@ export default function ProductDetailPage() {
   useEffect(()=>{let live=true; api<Product>(`/products/${encodeURIComponent(params.slug)}`).then((data)=>{if(live){setProduct(data);setImageIndex(0);setVariantIndex(0);setQuantity(1);setReviews([]);if(data.id) api<{items:Review[]}>(`/products/${data.id}/reviews`).then((result)=>live&&setReviews(result.items??[])).catch(()=>{});}}).catch((reason)=>live&&setError(errorMessage(reason)));return()=>{live=false};},[params.slug]);
   const { items: wishlist, toggle: toggleWishlist } = useWishlist(user?.id);
   const [wishlistError, setWishlistError] = useState("");
+  const [reviewError, setReviewError] = useState("");
   if(error) return <div className="store-page"><div className="inline-error">{error}</div><Link className="under-link" href="/products">← Back to all gadgets</Link></div>;
   if(!product) return <div className="store-page"><div className="skeleton-detail"/></div>;
   const variant = product.variants[variantIndex];
@@ -30,6 +31,7 @@ export default function ProductDetailPage() {
   function movePhoto(offset: number) {
     setImageIndex((current) => (current + offset + totalPhotos) % totalPhotos);
   }
+  const specifications = Object.entries(variant?.attributes ?? {});
   const isSaved = wishlist.some((item) => item.slug === product.slug);
   function saveProduct() {
     if (!product) return;
@@ -44,7 +46,7 @@ export default function ProductDetailPage() {
       setWishlistError("Could not update your wishlist on this device.");
     }
   }
-  async function submitReview(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!user){setNotice("Sign in with the account used for this purchase to leave a review.");return;}const reviewForm=event.currentTarget;const form=new FormData(reviewForm);try{await api(`/products/${product!.id}/reviews`,{method:"POST",body:JSON.stringify({variantId:variant?.id,rating:Number(form.get("rating")),title:form.get("title")||undefined,body:form.get("body")||undefined})});setNotice("Thanks. Your review is sent for moderation.");reviewForm.reset();}catch(reason){setError(errorMessage(reason));}}
+  async function submitReview(event:FormEvent<HTMLFormElement>){event.preventDefault();if(!user){setNotice("Sign in with the account used for this purchase to leave a review.");return;}setReviewError("");const reviewForm=event.currentTarget;const form=new FormData(reviewForm);try{await api(`/products/${product!.id}/reviews`,{method:"POST",body:JSON.stringify({variantId:variant?.id,rating:Number(form.get("rating")),title:form.get("title")||undefined,body:form.get("body")||undefined})});setNotice("Thanks. Your review is sent for moderation.");reviewForm.reset();}catch(reason){setReviewError(errorMessage(reason));}}
   function addToBag(){if(!variant)return;addGuestLine({variantId:variant.id,productId:product!.id,name:product!.name,slug:product!.slug,image:image??"",sku:variant.sku,priceMinor:variant.priceMinor,quantity,attributes:variant.attributes});setNotice("Added to your cart.")}
   function buyNow(){if(!variant)return;addGuestLine({variantId:variant.id,productId:product!.id,name:product!.name,slug:product!.slug,image:image??"",sku:variant.sku,priceMinor:variant.priceMinor,quantity,attributes:variant.attributes});router.push("/checkout")}
   return (
@@ -79,14 +81,15 @@ export default function ProductDetailPage() {
         <div className={styles.info}>
           {product.category && <small className={styles.category}>{product.category.name}</small>}
           <h1>{product.name}</h1>
-          <div className={styles.price}>
-            <strong>{variant ? formatMoney(variant.priceMinor) : "Price on request"}</strong>
-            {onSale && <del>{formatMoney(variant.compareAtMinor!)}</del>}
+          <div className={styles.offer}>
+            <div className={styles.price}>
+              <strong>{variant ? formatMoney(variant.priceMinor) : "Price on request"}</strong>
+              {onSale && <del>{formatMoney(variant.compareAtMinor!)}</del>}
+            </div>
+            <span className={styles.stock} data-available={available}>{available ? "In stock" : "Currently unavailable"}</span>
           </div>
-          <p className={styles.stock} data-available={available}>{available ? "In stock" : "Currently unavailable"}</p>
-          {product.description && <p className={styles.description}>{product.description}</p>}
           {product.variants.length > 1 && (
-            <label className="variant-select">Choose an option
+            <label className={styles.variant}>Choose an option
               <select value={variantIndex} onChange={(event) => {
                 setVariantIndex(Number(event.target.value));
                 setQuantity(1);
@@ -119,7 +122,45 @@ export default function ProductDetailPage() {
           <Link href="/shipping" className="under-link">Delivery, returns &amp; care</Link>
         </div>
       </section>
-      <section className="reviews-section"><div><small>WHAT CUSTOMERS SAY</small><h2>Reviews.</h2></div><div className="review-feed">{reviews.length?reviews.map((review)=><article key={review.id}><span>{"★".repeat(review.rating)}{"☆".repeat(5-review.rating)}</span><p>{review.body}</p><small>{review.user?.name??"Verified customer"} · Verified purchase</small></article>):<p>Reviews appear here after verified customers share their experience.</p>}{user&&<form className="review-form" onSubmit={submitReview}><h3>Share your experience</h3><label>Rating<select name="rating" defaultValue="5">{[5,4,3,2,1].map((rating)=><option key={rating} value={rating}>{rating} stars</option>)}</select></label><label>Title<input name="title" maxLength={180}/></label><label>Your review<textarea name="body" maxLength={5000} rows={4}/></label><button className="primary-button">Send for review <span>→</span></button></form>}</div></section>{error&&<div className="inline-error">{error}</div>}{notice&&<div className="toast" role="status">{notice}<Link href="/cart">View cart</Link><button onClick={()=>setNotice("")}>×</button></div>}
+      {(product.description || specifications.length > 0) && (
+        <section className={styles.overview} aria-labelledby="product-details-title">
+          <h2 id="product-details-title">Product details</h2>
+          {product.description && <p className={styles.description}>{product.description}</p>}
+          {specifications.length > 0 && (
+            <dl className={styles.specs}>
+              {specifications.map(([name, value]) => (
+                <div key={name}><dt>{name}</dt><dd>{value}</dd></div>
+              ))}
+            </dl>
+          )}
+        </section>
+      )}
+      <section className={styles.reviews} aria-labelledby="reviews-title">
+        <div>
+          <h2 id="reviews-title">Customer reviews</h2>
+          {reviews.length > 0 && <p>{reviews.length} {reviews.length === 1 ? "review" : "reviews"}</p>}
+        </div>
+        <div className="review-feed">
+          {reviews.length ? reviews.map((review) => (
+            <article key={review.id}>
+              <span aria-label={`Rated ${review.rating} out of 5`}>{"★".repeat(review.rating)}{"☆".repeat(5 - review.rating)}</span>
+              <p>{review.body}</p>
+              <small>{review.user?.name ?? "Verified customer"} · Verified purchase</small>
+            </article>
+          )) : <p>No reviews yet.</p>}
+          {user && (
+            <form className="review-form" onSubmit={submitReview}>
+              <h3>Share your experience</h3>
+              <label>Rating<select name="rating" defaultValue="5">{[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} stars</option>)}</select></label>
+              <label>Title<input name="title" maxLength={180}/></label>
+              <label>Your review<textarea name="body" maxLength={5000} rows={4}/></label>
+              {reviewError && <p className="inline-error" role="alert">{reviewError}</p>}
+              <button className="primary-button">Send for review</button>
+            </form>
+          )}
+        </div>
+      </section>
+      {notice&&<div className="toast" role="status">{notice}<Link href="/cart">View cart</Link><button onClick={()=>setNotice("")}>×</button></div>}
     </div>
   );
 }
